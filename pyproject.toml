@@ -11,11 +11,11 @@ packages = [{include = "MOBI_QC", from = "src"}]
 python = "~3.11"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.3"
+pytest = "^8.3.5"
 mypy = "^1.15.0"
-pre-commit = "^4.1.0"
+pre-commit = "^4.2.0"
 pytest-cov = "^6.0.0"
-ruff = "^0.9.9"
+ruff = "^0.11.2"
 
 [tool.poetry.group.docs.dependencies]
 pdoc = "^15.0.1"
