@@ -176,7 +176,7 @@ def behavior_qc(xdf_filename) -> dict[str,int]:
         vars (dict): Contains all quality control measures for behavior data of the give xdf file   
     """    
     events = {
-        200: 'Onset_ExperimentStart',
+        200: 'Onset_Experiment',
         10: 'Onset_RestingState',
         11: 'Offset_RestingState',
         500: 'Onset_StoryListening',
@@ -205,7 +205,7 @@ def behavior_qc(xdf_filename) -> dict[str,int]:
         401: 'Offset_impedanceCheck',
         80: 'Onset_SocialTask',
         81: 'Offset_SocialTask',
-        201: 'Offset_ExperimentEnd',
+        201: 'Offset_Experiment',
     }
 
     story_onsets = [20, 30, 40, 50, 60, 70]
