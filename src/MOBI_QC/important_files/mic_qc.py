@@ -105,11 +105,13 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
     """
     # load data
     sub_id = xdf_filename.split('-')[1].split('/')[0]
+    vars = {}
+    whole_mic_df = pd.DataFrame()
+
     try:
         whole_mic_df = import_mic_data(xdf_filename)
         mic_df = get_event_data(event = task, df = whole_mic_df, stim_df = stim_df)
 
-        vars = {}
         if task == 'RestingState':
             vars['sampling_rate'], vars['lsl_wav_duration_diff'], vars['num_NaN'], vars['percent_NaN'], vars['quan25'], vars['quan75'], vars['std'], vars['min'], vars['max'] = np.zeros(9)
             return vars, whole_mic_df
@@ -129,10 +131,13 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
         print(f"mic samples min: {vars['min']} \nmic samples max: {vars['max']}")
         
         mic_plots(mic_df, stim_df, sub_id)
+        error = False
 
-        return vars, whole_mic_df
-    except:
-        print(f'no mic data found for participant {sub_id}')
+        return vars, whole_mic_df, error
+    except IndexError:
+        print(f'Error: No mic data found for participant {sub_id}')
+        error = True
+        return vars, whole_mic_df, error
 
 # allow the functions in this script to be imported into other scripts
 if __name__ == "__main__":
