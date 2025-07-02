@@ -105,15 +105,21 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
     """
     # load data
     sub_id = xdf_filename.split('-')[1].split('/')[0]
+
+    # initialize mic_vars keys as zeros
+    vars = {}
+    vars['sampling_rate'], vars['lsl_wav_duration_diff'], vars['num_NaN'], vars['percent_NaN'], vars['quan25'], vars['quan75'], vars['std'], vars['min'], vars['max'] = np.zeros(9)
+
     try:
+        # get data
         whole_mic_df = import_mic_data(xdf_filename)
         mic_df = get_event_data(event = task, df = whole_mic_df, stim_df = stim_df)
 
-        vars = {}
+        # returns zeros in vars and data for entire exp in df if restingstate
         if task == 'RestingState':
-            vars['sampling_rate'], vars['lsl_wav_duration_diff'], vars['num_NaN'], vars['percent_NaN'], vars['quan25'], vars['quan75'], vars['std'], vars['min'], vars['max'] = np.zeros(9)
             return vars, whole_mic_df
         
+        # get metrics
         sampling_rate = get_sampling_rate(mic_df)
         vars['sampling_rate'] = sampling_rate
         print(f"Effective sampling rate: {sampling_rate:.4f}")
@@ -128,11 +134,18 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
         print('mic samples standard deviation: {:.4f}'.format(vars['std']))
         print(f"mic samples min: {vars['min']} \nmic samples max: {vars['max']}")
         
+        # plots
         mic_plots(mic_df, stim_df, sub_id)
 
-        return vars, whole_mic_df
-    except:
-        print(f'no mic data found for participant {sub_id}')
+        error = False
+        return vars, whole_mic_df, error
+
+    except IndexError:
+        print(f'Error: No mic data found for participant {sub_id}')
+        whole_mic_df = pd.DataFrame()
+        vars.update({key: float('nan') for key in vars.keys()})
+        error = True
+        return vars, whole_mic_df, error
 
 # allow the functions in this script to be imported into other scripts
 if __name__ == "__main__":
