@@ -9,6 +9,7 @@ import sounddevice as sd
 from glob import glob
 from tqdm import tqdm
 import datetime
+from stim_correction import trigger_recovery
 
 
 
@@ -17,13 +18,11 @@ def get_collection_date(xdf_filename:str):
     
     Args:
         xdf_filename (str): The xdf file to get the collection date from.
-            
     Returns:(str): the date and time of the first psychopy timestamp.
     """
     stim_df = import_stim_data(xdf_filename)
     stim_df.loc[stim_df.event == "psychopy_time_stamp", "trigger"].to_list()[0]
     return datetime.datetime.fromtimestamp(stim_df.loc[stim_df.event == "psychopy_time_stamp", "trigger"].to_list()[0]).strftime('%Y-%m-%d %H:%M:%S')
-
 
 
 def import_webcam_data(xdf_filename:str):    
@@ -147,7 +146,14 @@ def import_stim_data(xdf_filename:str):
     stim_df.loc[stim_df.trigger.astype(str).str.len() > 5, 'event'] = 'psychopy_time_stamp'
     stim_df['lsl_time_stamp'] = data[0]['time_stamps']
     stim_df['time'] = (data[0]['time_stamps'] - data[0]['time_stamps'][0])
-    stim_df
+
+    dt = datetime.datetime.fromtimestamp(stim_df.loc[stim_df.event == "psychopy_time_stamp", "trigger"].to_list()[0])#.strftime('%Y-%m-%d %H:%M:%S')
+    # check if date after 03/25/2025
+    
+    if (dt > datetime.datetime(2025, 3, 25)) & (dt < datetime.datetime(2025, 5, 23)):
+        print('trigger recovery')
+        stim_df = trigger_recovery(stim_df, xdf_filename)
+    
     return stim_df
 
 def get_event_data(event, df, stim_df):
