@@ -176,54 +176,55 @@ def eda_qc(xdf_filename: str, stim_df:pd.DataFrame, task='RestingState') -> tupl
         vars (dict): Quality control metrics for the EDA data.
         eda_slope_fig (matplotlib.pyplot): SCL trend analysis plot.
         eda_report_fig (matplotlib.pyplot): EDA report plot.
-        eda_error (bool): whether there was an error loading EDA data.
+        eda_error (bool): Indicates whether there was an error loading EDA data.
     """
     subject = xdf_filename.split('-')[1].split('/')[0]
     whole_ps_df = import_physio_data(xdf_filename)
     vars = {}
     vars['sampling_rate'], vars['signal_integrity_check'], vars['average_scl'], vars['scl_sd'], vars['scl_cv'], vars['average_scr_amplitude'], vars['sc_validity'], vars['snr'] = np.zeros(8)
-    
-    if 'EDA2' not in whole_ps_df.columns:
+
+    try: 
+        ps_df = get_event_data(event=task,
+                        df=whole_ps_df,
+                        stim_df=stim_df)
+        eda_df = ps_df[['EDA2', 'lsl_time_stamp', 'time']]
+
+        eda_sampling_rate = get_sampling_rate(eda_df)
+        eda_signals, info = eda_preprocess(eda_df, eda_sampling_rate)
+        average_scl, scl_sd, scl_cv = scl_stability(eda_signals['EDA_Tonic'])
+        average_scr_amplitude, scr_amplitude_validity = scr_amplitudes(info)
+        
+        print(f"Effective sampling rate: {eda_sampling_rate:.3f} Hz")
+        vars['sampling_rate'] = eda_sampling_rate
+        print(f"Signal Integrity Check: {eda_signal_integrity_check(eda_df):.3f} %")
+        vars['signal_integrity_check'] = eda_signal_integrity_check(eda_df)
+        print(f"Average Skin Conductance Level: {average_scl:.3f} mS")
+        vars['average_scl'] = average_scl
+        print(f"Skin Conductance Level Standard deviation: {scl_sd:.3f} mS")
+        vars['scl_sd'] = scl_sd
+        print(f"Skin Conductance Level Coefficient of Variation: {scl_cv:.3f} %")
+        vars['scl_cv'] = scl_cv
+        print(f"Average Amplitude of Skin Conductance Response: {average_scr_amplitude:.3f} mS")
+        vars['average_scr_amplitude'] = average_scr_amplitude
+        print(f"Skin Conductance Response Validity: {scr_amplitude_validity:.3f} %")
+        vars['sc_validity'] = scr_amplitude_validity
+        print(f"Signal to Noise Ratio: {eda_snr(eda_signals, eda_df, eda_sampling_rate):.3f} dB")
+        vars['snr'] = eda_snr(eda_signals, eda_df, eda_sampling_rate)
+
+        eda_slope_fig = scl_trend_analysis(eda_signals, eda_df, eda_sampling_rate, subject)
+        eda_report_fig = eda_report_plot(eda_signals, info, subject)
+        
+        eda_error = False
+        return vars, eda_slope_fig, eda_report_fig, whole_ps_df, eda_error
+
+    except KeyError: 
         print(f'Error: No EDA data found for participant {subject}')
         vars.update({key: float('nan') for key in vars.keys()})
         eda_error = True
         eda_slope_fig=None
         eda_report_fig=None
-        return vars, eda_slope_fig, eda_report_fig, whole_ps_df, eda_error
+        return vars, None, None, whole_ps_df, eda_error
 
-    ps_df = get_event_data(event=task,
-                    df=whole_ps_df,
-                    stim_df=stim_df)
-    eda_df = ps_df[['EDA2', 'lsl_time_stamp', 'time']]
-
-    eda_sampling_rate = get_sampling_rate(eda_df)
-    eda_signals, info = eda_preprocess(eda_df, eda_sampling_rate)
-    average_scl, scl_sd, scl_cv = scl_stability(eda_signals['EDA_Tonic'])
-    average_scr_amplitude, scr_amplitude_validity = scr_amplitudes(info)
-    
-    vars = {}
-    print(f"Effective sampling rate: {eda_sampling_rate:.3f} Hz")
-    vars['sampling_rate'] = eda_sampling_rate
-    print(f"Signal Integrity Check: {eda_signal_integrity_check(eda_df):.3f} %")
-    vars['signal_integrity_check'] = eda_signal_integrity_check(eda_df)
-    print(f"Average Skin Conductance Level: {average_scl:.3f} mS")
-    vars['average_scl'] = average_scl
-    print(f"Skin Conductance Level Standard deviation: {scl_sd:.3f} mS")
-    vars['scl_sd'] = scl_sd
-    print(f"Skin Conductance Level Coefficient of Variation: {scl_cv:.3f} %")
-    vars['scl_cv'] = scl_cv
-    print(f"Average Amplitude of Skin Conductance Response: {average_scr_amplitude:.3f} mS")
-    vars['average_scr_amplitude'] = average_scr_amplitude
-    print(f"Skin Conductance Response Validity: {scr_amplitude_validity:.3f} %")
-    vars['sc_validity'] = scr_amplitude_validity
-    print(f"Signal to Noise Ratio: {eda_snr(eda_signals, eda_df, eda_sampling_rate):.3f} dB")
-    vars['snr'] = eda_snr(eda_signals, eda_df, eda_sampling_rate)
-
-    eda_slope_fig = scl_trend_analysis(eda_signals, eda_df, eda_sampling_rate, subject)
-    eda_report_fig = eda_report_plot(eda_signals, info, subject)
-    
-    eda_error = False
-    return vars, eda_slope_fig, eda_report_fig, whole_ps_df, eda_error
 #%%
 
 if __name__ == "__main__":

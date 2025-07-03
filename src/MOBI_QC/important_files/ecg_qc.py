@@ -178,7 +178,7 @@ def ecg_report_plot(ecg_signals:pd.DataFrame, info: dict, subject:str) -> plt:
 
     return plt
 
-def ecg_qc(xdf_filename:str, stim_df:pd.DataFrame, task='RestingState') -> tuple[dict, plt, pd.DataFrame]:
+def ecg_qc(xdf_filename:str, stim_df:pd.DataFrame, task='RestingState') -> tuple[dict, plt, pd.DataFrame, bool]:
     """
     Performs quality control on ECG data from an XDF file.
     Args:
@@ -186,35 +186,47 @@ def ecg_qc(xdf_filename:str, stim_df:pd.DataFrame, task='RestingState') -> tuple
     Returns:
         vars (dict): Quality control metrics for the ECG data.
         fig (matplotlib.pyplot): Generated ECG report plot.
+        ecg_error (bool): Indicates whether there was an error loading ECG data. 
     """
     subject = xdf_filename.split('-')[1].split('/')[0]
     whole_ps_df = import_physio_data(xdf_filename)
-    ps_df = get_event_data(event=task,
-                    df=whole_ps_df,
-                    stim_df=stim_df)
-    ecg_df = ps_df[['ECG1', 'lsl_time_stamp', 'time']]
-
-    ecg_sampling_rate = get_sampling_rate(ecg_df)  
-    ecg_signals, info = ecg_preprocess(ecg_df, ecg_sampling_rate)
-    ecg_cleaned = ecg_signals['ECG_Clean']
-
     vars = {}
-    print(f"Effective sampling rate: {ecg_sampling_rate}")
-    vars['sampling_rate'] = ecg_sampling_rate
-    print(f"Average heart rate: {average_heartrate(ecg_signals)}")
-    vars['average_heart_rate'] = average_heartrate(ecg_signals)
-    print(f"Kurtosis signal quality index: {ecg_quality_kurtosis_SQI(ecg_cleaned)}")
-    vars['kurtosis_SQI'] = ecg_quality_kurtosis_SQI(ecg_cleaned)
-    print(f"Power spectrum distribution signal quality index: {ecg_quality_psd_SQI(ecg_cleaned, ecg_sampling_rate)}")
-    vars['power_spectrum_distribution_SQI'] = ecg_quality_psd_SQI(ecg_cleaned, ecg_sampling_rate)
-    print(f"Relative power in baseline signal quality index: {ecg_quality_baseline_power_SQI(ecg_cleaned, ecg_sampling_rate)}")
-    vars['relative_baseline_power_sqi'] = ecg_quality_baseline_power_SQI(ecg_cleaned, ecg_sampling_rate)
-    print(f"Signal to Noise Ratio: {ecg_snr(ecg_signals, ecg_sampling_rate)}")
-    vars['SNR'] = ecg_snr(ecg_signals, ecg_sampling_rate)
+    vars['sampling_rate'], vars['average_heart_rate'], vars['kurtosis_SQI'], vars['power_spectrum_distribution_SQI'], vars['relative_baseline_power_sqi'], vars['SNR'] = np.zeros(6)  
 
-    fig = ecg_report_plot(ecg_signals, info, subject)
+    try:
+        ps_df = get_event_data(event=task,
+                        df=whole_ps_df,
+                        stim_df=stim_df)
+        ecg_df = ps_df[['ECG1', 'lsl_time_stamp', 'time']]
 
-    return vars, fig, whole_ps_df
+        ecg_sampling_rate = get_sampling_rate(ecg_df)  
+        ecg_signals, info = ecg_preprocess(ecg_df, ecg_sampling_rate)
+        ecg_cleaned = ecg_signals['ECG_Clean']
+
+        print(f"Effective sampling rate: {ecg_sampling_rate}")
+        vars['sampling_rate'] = ecg_sampling_rate
+        print(f"Average heart rate: {average_heartrate(ecg_signals)}")
+        vars['average_heart_rate'] = average_heartrate(ecg_signals)
+        print(f"Kurtosis signal quality index: {ecg_quality_kurtosis_SQI(ecg_cleaned)}")
+        vars['kurtosis_SQI'] = ecg_quality_kurtosis_SQI(ecg_cleaned)
+        print(f"Power spectrum distribution signal quality index: {ecg_quality_psd_SQI(ecg_cleaned, ecg_sampling_rate)}")
+        vars['power_spectrum_distribution_SQI'] = ecg_quality_psd_SQI(ecg_cleaned, ecg_sampling_rate)
+        print(f"Relative power in baseline signal quality index: {ecg_quality_baseline_power_SQI(ecg_cleaned, ecg_sampling_rate)}")
+        vars['relative_baseline_power_sqi'] = ecg_quality_baseline_power_SQI(ecg_cleaned, ecg_sampling_rate)
+        print(f"Signal to Noise Ratio: {ecg_snr(ecg_signals, ecg_sampling_rate)}")
+        vars['SNR'] = ecg_snr(ecg_signals, ecg_sampling_rate)
+
+        fig = ecg_report_plot(ecg_signals, info, subject)
+
+        ecg_error = False
+        return vars, fig, whole_ps_df, ecg_error 
+
+    except KeyError:
+        print(f'Error: No ECG data found for participant {subject}')
+        vars.update({key: float('nan') for key in vars.keys()})
+        ecg_error = True
+        return vars, None, whole_ps_df, ecg_error
+
 #%% 
 # allow the functions in this script to be imported into other scripts
 if __name__ == "__main__":
