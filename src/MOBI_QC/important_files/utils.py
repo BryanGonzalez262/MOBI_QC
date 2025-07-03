@@ -175,19 +175,22 @@ def get_event_data(event, df, stim_df):
 # get durations of certain experiment arm
 def get_durations(xdf_path: str, 
     task: str, 
+    stim_df: pd.DataFrame
     df_map: dict, 
-    stim_df: pd.DataFrame) -> dict:
+    error_map: dict
+    ) -> dict:
     
     """
     Get the durations of each data stream and compare to their expected duration, given an experiment arm, where the expected duration is calculated from the LSL timestamps of the stimulus markers.
     
     Args:
+        xdf_path (str): The path to the xdf file.
         task (str): The part of the experiment to view durations. Can be one of "Experiment", 
             "RestingState", "StoryListening", "SocialTask", or any one of the stories ('BirthdayParty', 
             'ZoomClass', 'Tornado', 'FrogDissection', 'DanceContest', 'CampFriend')
-        xdf_path (str): The path to the xdf file.
-        df_map (dict): Containing dataframes for each data modality, loaded through import_modality_data functions in utils.
         stim_df (pd.DataFrame): The stimuli dataframe containing the events mapped to lsl timestamps.
+        df_map (dict): Contains dataframes for each data modality, loaded through import_modality_data functions in utils.
+        error_map (dict): Contains booleans for each data modality indicating error. 
     
     Returns:
         pd.DataFrame: The durations of each stream in seconds and mm:ss and the percent that that duration 
@@ -209,6 +212,10 @@ def get_durations(xdf_path: str,
     for i, stream in enumerate(streams):
         # don't include mic in resting state
         if task == 'RestingState' and stream == 'mic':
+            continue
+        if error_map[stream]: 
+            subject = xdf_path.split('/')[6].split('-')[1]
+            print(f'No {stream} data for participant {subject}')
             continue
         # grab data for stream + experiment part
         event_data = get_event_data(task, df_map[stream], stim_df)

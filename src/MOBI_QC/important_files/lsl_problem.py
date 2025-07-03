@@ -35,11 +35,12 @@ def lsl_problem_plot(plot_df: pd.DataFrame, sub_id: str, modality_to_plot: str):
     plt.tight_layout()
     plt.savefig(f'report_images/{sub_id}_LSL_timestamps.png')
     
-def lsl_loss_percentage(df_map: dict, sub_id: str) -> pd.DataFrame:
+def lsl_loss_percentage(df_map: dict, error_map: dict, sub_id: str) -> pd.DataFrame:
     """
     Calculate the percentage of data loss for each modality based on LSL timestamps.
     Args:
         df_map (dict): Dictionary containing dataframes for each modality.
+        error_map (dict): Contains booleans for each data modality indicating error. 
         sub_id (str): Subject ID.
     Returns:
         percent_data_loss (pd.DataFrame): Dataframe containing the percentage of data loss for each modality.
@@ -49,6 +50,9 @@ def lsl_loss_percentage(df_map: dict, sub_id: str) -> pd.DataFrame:
     percent_list = []
 
     for modality in modalities:
+        if error_map[modality]: 
+            print(f'No {modality} data for participant {sub_id}')
+            continue
         df = df_map[modality]
 
         # median diff between lsl_time_stamp (with 1.05 margin) 
@@ -72,11 +76,12 @@ def lsl_loss_percentage(df_map: dict, sub_id: str) -> pd.DataFrame:
     nonzero_loss = percent_data_loss[percent_data_loss['num_losses'] != 0]
     return nonzero_loss
     
-def lsl_loss_before_social(df_map: dict, sub_id: str, offset_social_timestamp: float) -> pd.DataFrame:
+def lsl_loss_before_social(df_map: dict, error_map: dict, sub_id: str, offset_social_timestamp: float) -> pd.DataFrame:
     """
     Calculate the percentage of data loss before the social task offset for each modality.
     Args:
         df_map (dict): Dictionary containing dataframes for each modality.
+        error_map (dict): Contains booleans for each data modality indicating error. 
         sub_id (str): Subject ID.
         offset_social_timestamp (float): Timestamp of  social task offset.
     Returns:
@@ -86,6 +91,9 @@ def lsl_loss_before_social(df_map: dict, sub_id: str, offset_social_timestamp: f
     social_percent_list = []
 
     for modality in modalities:
+        if error_map[modality]: 
+            print(f'No {modality} data for participant {sub_id}')
+            continue
         df = df_map[modality]
         social_df = df.loc[df.lsl_time_stamp <= offset_social_timestamp]
 
@@ -118,14 +126,16 @@ def lsl_loss_before_social(df_map: dict, sub_id: str, offset_social_timestamp: f
     nonzero_loss_social = percent_data_loss_social[percent_data_loss_social['num_losses'] != 0]
     return nonzero_loss_social
 
-def lsl_problem_qc(xdf_filename:str, df_map:dict, stim_df:pd.DataFrame, modality_to_plot='et') -> dict:
+def lsl_problem_qc(xdf_filename:str, stim_df:pd.DataFrame, df_map:dict, error_map:dict, modality_to_plot='et') -> dict:
     """
     Main function to check for LSL timestamp gaps in the data.
     Args:
         xdf_filename (str): Path to the XDF file.
-        df_map (dict): Dictionary with all data dfs 
         stim_df (pd.DataFrame): Contains stimulus markers
+        df_map (dict): Dictionary with all data dfs 
+        error_map (dict): Contains booleans for each data modality indicating error. 
         modality_to_plot (str): Which modality you want plotted. can be one of 'et', 'ps', 'mic', 'cam', 'eeg'   
+
         Returns:
         vars (dict): Dictionary containing the percentage of data loss for each modality and the number of loss instances.
     """
@@ -142,12 +152,12 @@ def lsl_problem_qc(xdf_filename:str, df_map:dict, stim_df:pd.DataFrame, modality
 
     vars = {}
 
-    vars['percent_loss'] = lsl_loss_percentage(df_map, sub_id)
+    vars['percent_loss'] = lsl_loss_percentage(df_map, error_map, sub_id)
     if vars['percent_loss'].empty:
         vars['percent_loss'] = f"no data loss detected for {sub_id} for entire experiment"
     print(vars['percent_loss'])
 
-    vars['loss_before_social_task'] = lsl_loss_before_social(df_map, sub_id, offset_social_timestamp)
+    vars['loss_before_social_task'] = lsl_loss_before_social(df_map, error_map, sub_id, offset_social_timestamp)
     if vars['loss_before_social_task'].empty:
         vars['loss_before_social_task'] = f"no data loss detected for {sub_id} before social task"
     print(vars['loss_before_social_task'])
