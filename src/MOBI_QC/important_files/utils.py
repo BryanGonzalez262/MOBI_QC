@@ -178,7 +178,7 @@ def get_durations(xdf_path: str,
     stim_df: pd.DataFrame,
     df_map: dict, 
     error_map: dict
-    ) -> dict:
+    ) -> pd.DataFrame:
     
     """
     Get the durations of each data stream and compare to their expected duration, given an experiment arm, where the expected duration is calculated from the LSL timestamps of the stimulus markers.
@@ -267,39 +267,31 @@ def load_xdf_from_zip(path_to_zip):
         #print(streams_collected)
     return data, info
 
-def whole_durations(xdf_path):
+def whole_durations(xdf_path: str, stim_df: pd.DataFrame, df_map: dict, error_map: dict) -> pd.DataFrame:
     """
     Get the durations of each data stream and compare to their expected duration, for the entire experiment, where the expected duration is 
     the max duration of any data stream.
     Args:
         xdf_path (str): The path to the xdf file.
+        stim_df (pd.DataFrame): The stimuli dataframe containing the events mapped to lsl timestamps.
+        df_map (dict): Contains dataframes for each data modality, loaded through import_modality_data functions in utils.
+        error_map (dict): Contains booleans for each data modality indicating error. 
 
     Returns:
         pd.DataFrame: The durations of each stream in seconds and mm:ss and the percent that that duration comprised 
         of the max duration of all data streams. 
     """
-    # import all data modalities
-    et_df = import_et_data(xdf_path)
-    stim_df = import_stim_data(xdf_path)
-    eeg_df = import_eeg_data(xdf_path)
-    mic_df = import_mic_data(xdf_path)
-    cam_df = import_video_data(xdf_path)
-    ps_df = import_physio_data(xdf_path)
-
-    df_map = {
-            'et': et_df,
-            'ps': ps_df,
-            'mic': mic_df,
-            'cam': cam_df,
-            'eeg': eeg_df
-        }
 
     streams = list(df_map.keys())
 
     whole_durations_df = pd.DataFrame(columns = ['stream', 'duration', 'mm:ss'])
   
     # populate whole_durations_df
-    for i, stream in enumerate(streams):  
+    for i, stream in enumerate(streams): 
+        if error_map[stream]:
+            subject = xdf_path.split('/')[6].split('-')[1]
+            print(f'No {stream} data for participant {subject}')
+            continue
         duration = df_map[stream]['lsl_time_stamp'].iloc[-1]- df_map[stream]['lsl_time_stamp'].iloc[0]
         duration = round(duration, 4)
         # convert to mm:ss
