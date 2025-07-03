@@ -23,7 +23,7 @@ def get_seconds_between_triggers(stim_df: pd.DataFrame, trigger1: int, trigger2:
     duration_between_triggers =  stim_df.loc[stim_df.trigger == trigger1, 'lsl_time_stamp'].values[0] - stim_df.loc[stim_df.trigger == trigger2, 'lsl_time_stamp'].values[0]
     return duration_between_triggers
 
-def missing_markers(events: dict[int, str], stim_df: pd.DataFrame) -> list | None:
+def get_missing_markers(events: dict[int, str], stim_df: pd.DataFrame) -> list | None:
     """
     This function checks for missing markers.
     Args:
@@ -224,8 +224,8 @@ def behavior_qc(xdf_filename) -> dict[str,int]:
     stim_df = import_stim_data(xdf_filename)
     
     vars = {}
-    print(f"Missing stimulus markers: {missing_markers(events, stim_df)}")
-    vars['missing_stimulus_markers'] = missing_markers(events, stim_df)
+    print(f"Missing stimulus markers: {get_missing_markers(events, stim_df)}")
+    vars['missing_stimulus_markers'] = get_missing_markers(events, stim_df)
     print(f"Duration of experiment: {total_experiment_duration(stim_df)}")
     vars['total_duration'] = total_experiment_duration(stim_df)
     print(f"Durations do not match expected length: {unexpected_durations(stim_df, story_onsets, events, audiofiles)}")

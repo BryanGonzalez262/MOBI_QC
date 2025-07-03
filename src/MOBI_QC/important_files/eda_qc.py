@@ -167,7 +167,7 @@ def eda_report_plot(eda_signals: pd.DataFrame, info: dict, subject: str) -> plt:
 
     return plt
 
-def eda_qc(xdf_filename: str, stim_df:pd.DataFrame, task='RestingState') -> tuple[dict, plt, plt, pd.DataFrame]:
+def eda_qc(xdf_filename: str, stim_df:pd.DataFrame, task='RestingState') -> tuple[dict, plt, plt, pd.DataFrame, bool]:
     """
     Performs quality control on EDA data from an XDF file.
     Args:
@@ -176,10 +176,23 @@ def eda_qc(xdf_filename: str, stim_df:pd.DataFrame, task='RestingState') -> tupl
         vars (dict): Quality control metrics for the EDA data.
         eda_slope_fig (matplotlib.pyplot): SCL trend analysis plot.
         eda_report_fig (matplotlib.pyplot): EDA report plot.
+        eda_error (bool): whether there was an error loading EDA data.
     """
     subject = xdf_filename.split('-')[1].split('/')[0]
+    whole_ps_df = import_physio_data(xdf_filename)
+    vars = {}
+    vars['sampling_rate'], vars['signal_integrity_check'], vars['average_scl'], vars['scl_sd'], vars['scl_cv'], vars['average_scr_amplitude'], vars['sc_validity'], vars['snr'] = np.zeros(8)
+    
+    if 'EDA2' not in whole_ps_df.columns:
+        print(f'Error: No EDA data found for participant {subject}')
+        vars.update({key: float('nan') for key in vars.keys()})
+        eda_error = True
+        eda_slope_fig=None
+        eda_report_fig=None
+        return vars, eda_slope_fig, eda_report_fig, whole_ps_df, eda_error
+
     ps_df = get_event_data(event=task,
-                    df=import_physio_data(xdf_filename),
+                    df=whole_ps_df,
                     stim_df=stim_df)
     eda_df = ps_df[['EDA2', 'lsl_time_stamp', 'time']]
 
@@ -209,7 +222,8 @@ def eda_qc(xdf_filename: str, stim_df:pd.DataFrame, task='RestingState') -> tupl
     eda_slope_fig = scl_trend_analysis(eda_signals, eda_df, eda_sampling_rate, subject)
     eda_report_fig = eda_report_plot(eda_signals, info, subject)
     
-    return vars, eda_slope_fig, eda_report_fig, ps_df
+    eda_error = False
+    return vars, eda_slope_fig, eda_report_fig, whole_ps_df, eda_error
 #%%
 
 if __name__ == "__main__":

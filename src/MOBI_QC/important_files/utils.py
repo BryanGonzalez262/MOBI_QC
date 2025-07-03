@@ -175,7 +175,7 @@ def get_event_data(event, df, stim_df):
 # get durations of certain experiment arm
 def get_durations(xdf_path: str, 
     task: str, 
-    stim_df: pd.DataFrame
+    stim_df: pd.DataFrame,
     df_map: dict, 
     error_map: dict
     ) -> dict:

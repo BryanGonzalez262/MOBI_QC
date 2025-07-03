@@ -90,7 +90,7 @@ def mic_plots(mic_df: pd.DataFrame, stim_df: pd.DataFrame, sub_id: str):
     plt.tight_layout()
     plt.savefig(f'report_images/{sub_id}_mic_lineplot.png')
 
-def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple[dict, pd.DataFrame]:
+def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple[dict, pd.DataFrame, bool]:
     """
     Main function to extract microphone quality control metrics.
     Args:
@@ -102,6 +102,7 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
     Returns:
         vars (dict): Dictionary containing the quality control metrics.
         mic_df (pd.DataFrame): DataFrame containing microphone data.
+        mic_error (bool): Whether there was an error loading mic data.
     """
     # load data
     sub_id = xdf_filename.split('-')[1].split('/')[0]
@@ -114,10 +115,11 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
         # get data
         whole_mic_df = import_mic_data(xdf_filename)
         mic_df = get_event_data(event = task, df = whole_mic_df, stim_df = stim_df)
+        mic_error = False
 
         # returns zeros in vars and data for entire exp in df if restingstate
         if task == 'RestingState':
-            return vars, whole_mic_df
+            return vars, whole_mic_df, mic_error
         
         # get metrics
         sampling_rate = get_sampling_rate(mic_df)
@@ -137,15 +139,14 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
         # plots
         mic_plots(mic_df, stim_df, sub_id)
 
-        error = False
-        return vars, whole_mic_df, error
+        return vars, whole_mic_df, mic_error
 
     except IndexError:
         print(f'Error: No mic data found for participant {sub_id}')
         whole_mic_df = pd.DataFrame()
         vars.update({key: float('nan') for key in vars.keys()})
-        error = True
-        return vars, whole_mic_df, error
+        mic_error = True
+        return vars, whole_mic_df, mic_error
 
 # allow the functions in this script to be imported into other scripts
 if __name__ == "__main__":

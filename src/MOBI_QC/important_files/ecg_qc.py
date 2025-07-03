@@ -188,8 +188,9 @@ def ecg_qc(xdf_filename:str, stim_df:pd.DataFrame, task='RestingState') -> tuple
         fig (matplotlib.pyplot): Generated ECG report plot.
     """
     subject = xdf_filename.split('-')[1].split('/')[0]
+    whole_ps_df = import_physio_data(xdf_filename)
     ps_df = get_event_data(event=task,
-                    df=import_physio_data(xdf_filename),
+                    df=whole_ps_df,
                     stim_df=stim_df)
     ecg_df = ps_df[['ECG1', 'lsl_time_stamp', 'time']]
 
@@ -213,7 +214,7 @@ def ecg_qc(xdf_filename:str, stim_df:pd.DataFrame, task='RestingState') -> tuple
 
     fig = ecg_report_plot(ecg_signals, info, subject)
 
-    return vars, fig, ps_df
+    return vars, fig, whole_ps_df
 #%% 
 # allow the functions in this script to be imported into other scripts
 if __name__ == "__main__":
