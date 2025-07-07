@@ -115,7 +115,6 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
         # get data
         whole_mic_df = import_mic_data(xdf_filename)
         mic_df = get_event_data(event = task, df = whole_mic_df, stim_df = stim_df)
-        mic_error = False
 
         # returns zeros in vars and data for entire exp in df if restingstate
         if task == 'RestingState':
@@ -138,14 +137,17 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
         
         # plots
         mic_plots(mic_df, stim_df, sub_id)
+        mic_error = False
+
 
         return vars, whole_mic_df, mic_error
 
     except IndexError:
-        print(f'Error: No mic data found for participant {sub_id}')
+        
         whole_mic_df = pd.DataFrame()
         vars.update({key: float('nan') for key in vars.keys()})
         mic_error = True
+        print(f'Error: No mic data found for participant {sub_id}')
         return vars, whole_mic_df, mic_error
 
 # allow the functions in this script to be imported into other scripts

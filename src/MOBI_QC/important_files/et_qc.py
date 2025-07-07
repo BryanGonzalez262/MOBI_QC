@@ -170,7 +170,7 @@ def et_lineplot(et_df: pd.DataFrame, percent_over02: float, sub_id: str):
     plt.savefig(f'report_images/{sub_id}_et_gazedifference.png')
 
 
-def et_qc(xdf_filename: str, stim_df: pd.DataFrame, task = 'Experiment') -> tuple[dict, pd.DataFrame]:
+def et_qc(xdf_filename: str, stim_df: pd.DataFrame, task = 'Experiment') -> tuple[dict, pd.DataFrame, bool]:
     """
     Main function to extract eye tracking quality control metrics.
     Args:
@@ -179,36 +179,49 @@ def et_qc(xdf_filename: str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
         task (str): arm of the experiment for which user wants quality control performed.
     Returns:
         vars (dict): Dictionary containing quality control metrics.
-        et_df (pd.DataFrame): Dataframe containing eye-tracking data.
+        et_df (pd.DataFrame): Dataframe containing eye tracking data.
+        et_error (bool): Whether there was an error loading eye tracking data.
+
     """
     sub_id = xdf_filename.split('-')[1].split('/')[0]
-    whole_et_df = import_et_data(xdf_filename)
-    et_df = get_event_data(event = task, df = whole_et_df, stim_df = stim_df)
-
-
-    sampling_rate = get_sampling_rate(et_df)
-    val_df = et_val(et_df)
 
     vars = {}
 
-    vars['sampling_rate'] = sampling_rate
-    print(f"Effective sampling rate: {sampling_rate:.4f}")
+    try:
+        whole_et_df = import_et_data(xdf_filename)
+        et_df = get_event_data(event = task, df = whole_et_df, stim_df = stim_df)
 
-    vars['flag1'] = et_flag_1(val_df)
-    print(f"Flag: all coordinates have the same % validity within each measure (LR, gaze point/origin/diameter): {vars['flag1']}")
 
-    vars['flag2'] = et_flag_2(val_df)
-    print(f"Flag: % of NaNs is the same between coordinate systems (UCS and TBCS (gaze origin) and between UCS and display area (gaze point)): {vars['flag2']}")
+        sampling_rate = get_sampling_rate(et_df)
+        val_df = et_val(et_df)
 
-    vars['LR_mean_diff'] = et_val_LR(val_df)
-    print(f"Mean difference in percent valid data between right and left eyes: {vars['LR_mean_diff']:.4%}")
+        vars['sampling_rate'] = sampling_rate
+        print(f"Effective sampling rate: {sampling_rate:.4f}")
 
-    vars['percent_over02'] = et_percent_over02(et_df)
-    print(f"Percent of data with gaze point differences of over 0.2 mm: {vars['percent_over02']:.4%}")
+        vars['flag1'] = et_flag_1(val_df)
+        print(f"Flag: all coordinates have the same % validity within each measure (LR, gaze point/origin/diameter): {vars['flag1']}")
 
-    et_lineplot(et_df, vars['percent_over02'], sub_id)
+        vars['flag2'] = et_flag_2(val_df)
+        print(f"Flag: % of NaNs is the same between coordinate systems (UCS and TBCS (gaze origin) and between UCS and display area (gaze point)): {vars['flag2']}")
 
-    return vars, whole_et_df
+        vars['LR_mean_diff'] = et_val_LR(val_df)
+        print(f"Mean difference in percent valid data between right and left eyes: {vars['LR_mean_diff']:.4%}")
+
+        vars['percent_over02'] = et_percent_over02(et_df)
+        print(f"Percent of data with gaze point differences of over 0.2 mm: {vars['percent_over02']:.4%}")
+
+        et_lineplot(et_df, vars['percent_over02'], sub_id)
+
+        et_error = False
+
+        return vars, whole_et_df, et_error
+    except: # leaving this without a specific error for now because we have no PTs without ET data!
+        
+        whole_et_df = pd.DataFrame()
+        vars.update({key: float('nan') for key in vars.keys()})
+        et_error = True
+        print(f'Error: No ET data found for participant {sub_id}')
+        return vars, whole_et_df, et_error
 
 # allow the functions in this script to be imported into other scripts
 if __name__ == "__main__":
