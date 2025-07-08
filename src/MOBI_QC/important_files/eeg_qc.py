@@ -1,4 +1,4 @@
-#%%
+
 import matplotlib.pyplot as plt
 import mne
 import numpy as np
@@ -12,8 +12,6 @@ import json
 warnings.filterwarnings("ignore")
 from mne.preprocessing import ICA
 
-
-#%%
 
 xdf_filename = '/Users/bryan.gonzalez/CUNY_subs/sub-P5029423/sub-P5029423_ses-S001_task-CUNY_run-001_mobi.xdf'
 def compute_eeg_pipeline(xdf_filename, stim_df, task='RestingState'):
@@ -145,7 +143,12 @@ def compute_eeg_pipeline(xdf_filename, stim_df, task='RestingState'):
     num_components = .95 
     ica = ICA(n_components=num_components, method='picard')
     ica.fit(raw_cleaned)
-    
+    fig = ica.plot_components( title='ICA Components')
+    # Save the ICA plot
+    if len(fig) > 1:
+        fig[0].savefig(f'report_images/sub-{subject}_eeg_ica_components.png', bbox_inches='tight')
+    else:
+        fig.savefig(f'report_images/sub-{subject}_eeg_ica_components.png', bbox_inches='tight')
 
     return vars, raw_cleaned, ica, ddf
 
@@ -163,8 +166,3 @@ def test_eeg_pipeline(xdf_filename):
 # allow the functions in this script to be imported into other scripts
 if __name__ == "__main__":
     pass
-# %%
-
-#vars = compute_eeg_pipeline(xdf_filename)
-
-# %%
