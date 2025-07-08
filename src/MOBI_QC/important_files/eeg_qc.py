@@ -92,9 +92,11 @@ def compute_eeg_pipeline(xdf_filename, stim_df, task='RestingState'):
             }
         # these params set up the robust reference  - i.e. median of all channels and interpolate bad channels
         prep = pyprep.PrepPipeline(raw, montage=montage, channel_wise=True, prep_params=prep_params)
+        print("STARTING preprocessing")
+
         prep_output = prep.fit()
         raw_cleaned = prep_output.raw_eeg
-
+        print("DONE with preprocessing")
 
         # check if cleaned file already exists
         save_path = '/'.join(xdf_filename.split('/')[:-1]) + f'/sub-{subject}_ses-S001_task-CUNY_run-001_eeg_clean.fif'

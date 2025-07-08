@@ -167,5 +167,5 @@ bids_explorer/
 MOBI_QC/src/MOBI_QC/.DS_Store
 MOBI_QC/src/MOBI_QC/files_to_ignore/
 MOBI_QC/src/MOBI_QC/important_files/.DS_Store
-MOBI_QC/src/MOBI_QC/important_files/report_images/*
+MOBI_QC/src/MOBI_QC/important_files/report_images
 .DS_Store
