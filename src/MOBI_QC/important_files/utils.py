@@ -3,6 +3,7 @@ import pyxdf
 import tarfile
 from io import BytesIO
 import os
+import platform
 
 import numpy as np
 import sounddevice as sd
@@ -14,16 +15,16 @@ from stim_correction import trigger_recovery
 
 
 def get_collection_date(xdf_filename:str):
-    """Get the collection date from the xdf file.
-    
-    Args:
-        xdf_filename (str): The xdf file to get the collection date from.
-    Returns:(str): the date and time of the first psychopy timestamp.
-    """
-    stim_df = import_stim_data(xdf_filename)
-    stim_df.loc[stim_df.event == "psychopy_time_stamp", "trigger"].to_list()[0]
-    return datetime.datetime.fromtimestamp(stim_df.loc[stim_df.event == "psychopy_time_stamp", "trigger"].to_list()[0]).strftime('%Y-%m-%d %H:%M:%S')
-
+    if platform.system() == 'Windows':
+            return datetime.datetime.fromtimestamp(os.path.getctime(xdf_filename))
+    else:
+        # On Unix, getctime returns the last metadata change — not creation time
+        stat = os.stat(xdf_filename)
+        try:
+            return datetime.datetime.fromtimestamp(stat.st_birthtime).strftime('%Y-%m-%d %H:%M:%S')
+        except AttributeError:
+            # Fallback: use modification time instead
+            return datetime.datetime.fromtimestamp(stat.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
 
 def import_webcam_data(xdf_filename:str):    
     cam_data, _ = pyxdf.load_xdf(xdf_filename, select_streams=[{'name': 'WebcamStream'}], verbose=False)
