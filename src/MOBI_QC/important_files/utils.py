@@ -214,7 +214,7 @@ def get_durations(xdf_path: str,
         if task == 'RestingState' and stream == 'mic':
             continue
         if error_map[stream]: 
-            subject = xdf_path.split('/')[6].split('-')[1]
+            subject = xdf_path.split('sub-')[-1].split('_')[0]#xdf_path.split('/')[6].split('-')[1]
             print(f'No {stream} data for participant {subject}')
             continue
         # grab data for stream + experiment part
