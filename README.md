@@ -27,7 +27,7 @@
 - **Export to csv**: Results from entire dataset are summarized and exported in a csv file to facilitate feature identification and descriptive statistics for the dataset.
 
 ## Requirements
-- **pyxdf**: a ytho library for importing Extensible Data Format(XDF)
+- **pyxdf**: a python library for importing Extensible Data Format(XDF)
 - **MNE-Python**: a python pacakge used for preproecessing of EEG
 - **Neurokit2**: a python toolbox used for processing of physiological signals
 - **librosa**: a python package for music and audio analysis
