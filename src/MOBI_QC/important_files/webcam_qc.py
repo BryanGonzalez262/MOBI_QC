@@ -141,7 +141,7 @@ def plot_frames_with_wrap(frames, highlight_indices=[], overlap_ratio=0.3, frame
 def webcam_qc(xdf_filename:str, video_file:str, stim_df:pd.DataFrame, task:str):
     cam_df = import_video_data(xdf_filename)
     
-    sub_id = xdf_filename.split('-')[1].split('/')[0]
+    sub_id = xdf_filename.split('sub-')[1].split('/')[0]
 
 
     exp_start = stim_df.loc[stim_df.event == f'Onset_{task}', 'lsl_time_stamp'].values[0]

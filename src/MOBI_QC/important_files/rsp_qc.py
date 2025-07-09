@@ -209,7 +209,7 @@ def rsp_qc(xdf_filename:str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
     """
     
     # load data 
-    sub_id = xdf_filename.split('-')[1].split('/')[0]
+    sub_id = xdf_filename.split('sub-')[1].split('/')[0]
     whole_ps_df = import_physio_data(xdf_filename)
     ps_df = get_event_data(event = task, df = whole_ps_df, stim_df = stim_df)
 

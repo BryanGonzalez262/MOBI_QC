@@ -32,6 +32,22 @@ def et_val(et_df: pd.DataFrame) -> pd.DataFrame:
 
     return val_df
 
+def et_invalid_data(et_df: pd.DataFrame) -> tuple[float, float, float, float, float, float]:
+    """
+    Calculate the percentage of invalid data for each eye tracking variables.
+    Args:
+        et_df (pd.DataFrame): Dataframe containing the eye tracking data.
+    Returns:
+        left_gaze_point_invalid, right_gaze_point_invalid, left_gaze_origin_invalid, right_gaze_origin_invalid, left_pupil_invalid, right_pupil_invalid (floats): Decimals representing amount of data invalid from each variable.
+    """
+    left_gaze_point_invalid = 1 - et_df.left_gaze_point_validity.mean() 
+    right_gaze_point_invalid = 1 - et_df.right_gaze_point_validity.mean()
+    left_gaze_origin_invalid = 1 - et_df.left_gaze_origin_validity.mean()
+    right_gaze_origin_invalid = 1 - et_df.right_gaze_origin_validity.mean()
+    left_pupil_invalid = 1 - et_df.left_pupil_validity.mean()
+    right_pupil_invalid = 1 - et_df.right_pupil_validity.mean()
+    return left_gaze_point_invalid, right_gaze_point_invalid, left_gaze_origin_invalid, right_gaze_origin_invalid, left_pupil_invalid, right_pupil_invalid 
+
 def et_flag_1(val_df: pd.DataFrame) -> bool:
     """
     Check if all coordinates have the same percentage of validity within each measure (LR, gaze point/origin/diameter).
@@ -183,20 +199,27 @@ def et_qc(xdf_filename: str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
         et_error (bool): Whether there was an error loading eye tracking data.
 
     """
-    sub_id = xdf_filename.split('-')[1].split('/')[0]
-
+    sub_id = xdf_filename.split('sub-')[1].split('/')[0]
     vars = {}
+    vars['sampling_rate'], vars['left_gaze_point_invalid'], vars['right_gaze_point_invalid'], vars['left_gaze_origin_invalid'], vars['right_gaze_origin_invalid'], vars['left_pupil_invalid'], vars['right_pupil_invalid'], vars['flag1'], vars['flag2'], vars['LR_mean_diff'], vars['percent_over02'] = np.zeros(11)
 
     try:
         whole_et_df = import_et_data(xdf_filename)
         et_df = get_event_data(event = task, df = whole_et_df, stim_df = stim_df)
-
 
         sampling_rate = get_sampling_rate(et_df)
         val_df = et_val(et_df)
 
         vars['sampling_rate'] = sampling_rate
         print(f"Effective sampling rate: {sampling_rate:.4f}")
+
+        vars['left_gaze_point_invalid'], vars['right_gaze_point_invalid'], vars['left_gaze_origin_invalid'], vars['right_gaze_origin_invalid'], vars['left_pupil_invalid'], vars['right_pupil_invalid'] = et_invalid_data(et_df)
+        print(f"Percent invalid data in left gaze point: {left_gaze_point_invalid:.4%}")
+        print(f"Percent invalid data in right gaze point: {right_gaze_point_invalid:.4%}")
+        print(f"Percent invalid data in left gaze origin: {left_gaze_origin_invalid:.4%}")
+        print(f"Percent invalid data in right gaze origin: {right_gaze_origin_invalid:.4%}")
+        print(f"Percent invalid data in left pupil diameter: {left_pupil_invalid:.4%}")
+        print(f"Percent invalid data in right pupil diameter: {right_pupil_invalid:.4%}")
 
         vars['flag1'] = et_flag_1(val_df)
         print(f"Flag: all coordinates have the same % validity within each measure (LR, gaze point/origin/diameter): {vars['flag1']}")

@@ -188,7 +188,7 @@ def ecg_qc(xdf_filename:str, stim_df:pd.DataFrame, task='RestingState') -> tuple
         fig (matplotlib.pyplot): Generated ECG report plot.
         ecg_error (bool): Indicates whether there was an error loading ECG data. 
     """
-    subject = xdf_filename.split('-')[1].split('/')[0]
+    subject = xdf_filename.split('sub-')[1].split('/')[0]
     whole_ps_df = import_physio_data(xdf_filename)
     vars = {}
     vars['sampling_rate'], vars['average_heart_rate'], vars['kurtosis_SQI'], vars['power_spectrum_distribution_SQI'], vars['relative_baseline_power_sqi'], vars['SNR'] = np.zeros(6)  

@@ -140,7 +140,7 @@ def lsl_problem_qc(xdf_filename:str, stim_df:pd.DataFrame, df_map:dict, error_ma
         vars (dict): Dictionary containing the percentage of data loss for each modality and the number of loss instances.
     """
     # load data 
-    sub_id = xdf_filename.split('-')[1].split('/')[0]
+    sub_id = xdf_filename.split('sub-')[1].split('/')[0]
 
     offset_social_timestamp = stim_df.loc[stim_df['event'] == 'Offset_SocialTask', 'lsl_time_stamp'].values[0]
 

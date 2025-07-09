@@ -178,7 +178,7 @@ def eda_qc(xdf_filename: str, stim_df:pd.DataFrame, task='RestingState') -> tupl
         eda_report_fig (matplotlib.pyplot): EDA report plot.
         eda_error (bool): Indicates whether there was an error loading EDA data.
     """
-    subject = xdf_filename.split('-')[1].split('/')[0]
+    subject = xdf_filename.split('sub-')[1].split('/')[0]
     whole_ps_df = import_physio_data(xdf_filename)
     vars = {}
     vars['sampling_rate'], vars['signal_integrity_check'], vars['average_scl'], vars['scl_sd'], vars['scl_cv'], vars['average_scr_amplitude'], vars['sc_validity'], vars['snr'] = np.zeros(8)

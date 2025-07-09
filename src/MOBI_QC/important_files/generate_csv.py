@@ -14,7 +14,7 @@ from lsl_problem import *
 
 def get_subjectID_and_collectionDate(xdf_filename:str):
     
-    subject_id = xdf_filename.split('-')[1].split('/')[0]
+    subject_id = xdf_filename.split('sub-')[1].split('/')[0]
     collection_date = get_collection_date(xdf_filename)
     
     return subject_id, collection_date
