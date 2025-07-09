@@ -218,7 +218,7 @@ def eda_qc(xdf_filename: str, stim_df:pd.DataFrame, task='RestingState') -> tupl
         return vars, eda_slope_fig, eda_report_fig, whole_ps_df, eda_error
 
     except KeyError: 
-        print(f'Error: No EDA data found for participant {subject}')
+        print(f'Error: No EDA data found for participant {subject} in {xdf_filename}.')
         vars.update({key: float('nan') for key in vars.keys()})
         eda_error = True
         eda_slope_fig=None

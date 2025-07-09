@@ -214,12 +214,12 @@ def et_qc(xdf_filename: str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
         print(f"Effective sampling rate: {sampling_rate:.4f}")
 
         vars['left_gaze_point_invalid'], vars['right_gaze_point_invalid'], vars['left_gaze_origin_invalid'], vars['right_gaze_origin_invalid'], vars['left_pupil_invalid'], vars['right_pupil_invalid'] = et_invalid_data(et_df)
-        print(f"Percent invalid data in left gaze point: {left_gaze_point_invalid:.4%}")
-        print(f"Percent invalid data in right gaze point: {right_gaze_point_invalid:.4%}")
-        print(f"Percent invalid data in left gaze origin: {left_gaze_origin_invalid:.4%}")
-        print(f"Percent invalid data in right gaze origin: {right_gaze_origin_invalid:.4%}")
-        print(f"Percent invalid data in left pupil diameter: {left_pupil_invalid:.4%}")
-        print(f"Percent invalid data in right pupil diameter: {right_pupil_invalid:.4%}")
+        print(f"Percent invalid data in left gaze point: {vars['left_gaze_point_invalid']:.4%}")
+        print(f"Percent invalid data in right gaze point: {vars['right_gaze_point_invalid']:.4%}")
+        print(f"Percent invalid data in left gaze origin: {vars['left_gaze_origin_invalid']:.4%}")
+        print(f"Percent invalid data in right gaze origin: {vars['right_gaze_origin_invalid']:.4%}")
+        print(f"Percent invalid data in left pupil diameter: {vars['left_pupil_invalid']:.4%}")
+        print(f"Percent invalid data in right pupil diameter: {vars['right_pupil_invalid']:.4%}")
 
         vars['flag1'] = et_flag_1(val_df)
         print(f"Flag: all coordinates have the same % validity within each measure (LR, gaze point/origin/diameter): {vars['flag1']}")
@@ -243,7 +243,7 @@ def et_qc(xdf_filename: str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
         whole_et_df = pd.DataFrame()
         vars.update({key: float('nan') for key in vars.keys()})
         et_error = True
-        print(f'Error: No ET data found for participant {sub_id}')
+        print(f'Error: No ET data found for participant {sub_id} in {xdf_filename}.')
         return vars, whole_et_df, et_error
 
 # allow the functions in this script to be imported into other scripts

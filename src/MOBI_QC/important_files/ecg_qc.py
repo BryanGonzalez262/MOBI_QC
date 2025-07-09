@@ -222,7 +222,7 @@ def ecg_qc(xdf_filename:str, stim_df:pd.DataFrame, task='RestingState') -> tuple
         return vars, fig, whole_ps_df, ecg_error 
 
     except KeyError:
-        print(f'Error: No ECG data found for participant {subject}')
+        print(f'Error: No ECG data found for participant {subject} in {xdf_filename}.')
         vars.update({key: float('nan') for key in vars.keys()})
         ecg_error = True
         return vars, None, whole_ps_df, ecg_error
