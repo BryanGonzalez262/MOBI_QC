@@ -145,7 +145,7 @@ def compute_eeg_pipeline(xdf_filename, stim_df, task='RestingState'):
     ica.fit(raw_cleaned, reject_by_annotation=True)
     fig = ica.plot_components( title='ICA Components')
     # Save the ICA plot
-    if len(fig) > 1:
+    if isinstance(fig, list):
         fig[0].savefig(f'report_images/sub-{subject}_eeg_ica_components.png', bbox_inches='tight')
     else:
         fig.savefig(f'report_images/sub-{subject}_eeg_ica_components.png', bbox_inches='tight')
