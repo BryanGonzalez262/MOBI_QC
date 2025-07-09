@@ -142,13 +142,37 @@ def compute_eeg_pipeline(xdf_filename, stim_df, task='RestingState'):
     # that seem to represent the actual brain activations well
     num_components = .95 
     ica = ICA(n_components=num_components, method='picard')
-    ica.fit(raw_cleaned)
+    ica.fit(raw_cleaned, reject_by_annotation=True)
     fig = ica.plot_components( title='ICA Components')
     # Save the ICA plot
     if len(fig) > 1:
         fig[0].savefig(f'report_images/sub-{subject}_eeg_ica_components.png', bbox_inches='tight')
     else:
         fig.savefig(f'report_images/sub-{subject}_eeg_ica_components.png', bbox_inches='tight')
+
+    # MNE ICA LABEL
+    from mne_icalabel import label_components
+    ic_labels = label_components(raw_cleaned, ica, method='iclabel')
+    # exclude components that are not brain activity
+    exclude_components = [i for i, label in enumerate(ic_labels['labels']) if 
+                          label not in ['brain', 'other']]
+    ica.exclude = exclude_components
+    vars['excluded_components'] = exclude_components
+    ica.apply(raw_cleaned)
+
+    raw_cleaned.annotations.delete([i for i, desc in enumerate(raw_cleaned.annotations.description) if desc == 'blink' or desc == 'BAD_muscle'])
+    fig = raw_cleaned.plot(show_scrollbars=False,
+                            show_scalebars=False,events=None, start=0, 
+                            duration=200,n_channels=50, scalings=.35e-4, color='k', title='EEG Data after ICA')
+
+    fig.savefig(f'report_images/{subject}_eeg_cleaned.png', dpi=300, bbox_inches='tight')
+
+
+    fig = raw_cleaned.plot_psd(fmax=50, average=False, show=True)
+    fig.savefig(f'report_images/{subject}_eeg_cleaned_psd.png', dpi=300, bbox_inches='tight')
+    
+    # TODO: Possibly add this plot_overlay image to show before/after ICA
+    # ica.plot_overlay(raw_cleaned, picks=[0,3,10,11,13,14,18,19])
 
     return vars, raw_cleaned, ica, ddf
 
