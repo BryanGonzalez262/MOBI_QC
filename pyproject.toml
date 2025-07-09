@@ -71,6 +71,9 @@ librosa = "^0.11.0"
 opencv-python = "^4.11.0.86"
 pywavelets = "^1.8.0"
 python-picard = "^0.8"
+mne-icalabel = "^0.7.0"
+torch = "^2.7.1"
+onnxruntime = "^1.22.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
