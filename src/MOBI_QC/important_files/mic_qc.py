@@ -105,7 +105,7 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
         mic_error (bool): Whether there was an error loading mic data.
     """
     # load data
-    sub_id = xdf_filename.split('-')[1].split('/')[0]
+    sub_id = xdf_filename.split('sub-')[1].split('/')[0]
 
     # initialize mic_vars keys as zeros
     vars = {}
