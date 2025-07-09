@@ -147,7 +147,7 @@ def mic_qc(xdf_filename:str, stim_df:pd.DataFrame, task = 'Experiment') -> tuple
         whole_mic_df = pd.DataFrame()
         vars.update({key: float('nan') for key in vars.keys()})
         mic_error = True
-        print(f'Error: No mic data found for participant {sub_id}')
+        print(f'Error: No mic data found for participant {sub_id} in {xdf_filename}')
         return vars, whole_mic_df, mic_error
 
 # allow the functions in this script to be imported into other scripts
