@@ -74,7 +74,7 @@ def lsl_loss_percentage(df_map: dict, error_map: dict, sub_id: str) -> pd.DataFr
     percent_data_loss = pd.DataFrame(percent_list)
     percent_data_loss.sort_values(by='percent_lost', inplace=True, ascending=False)
     nonzero_loss = percent_data_loss[percent_data_loss['num_losses'] != 0]
-    return nonzero_loss
+    return percent_data_loss
     
 def lsl_loss_before_social(df_map: dict, error_map: dict, sub_id: str, offset_social_timestamp: float) -> pd.DataFrame:
     """
@@ -124,7 +124,7 @@ def lsl_loss_before_social(df_map: dict, error_map: dict, sub_id: str, offset_so
     percent_data_loss_social = pd.DataFrame(social_percent_list)
     percent_data_loss_social.sort_values(by='percent_lost', inplace=True, ascending=False)
     nonzero_loss_social = percent_data_loss_social[percent_data_loss_social['num_losses'] != 0]
-    return nonzero_loss_social
+    return percent_data_loss_social
 
 def lsl_problem_qc(xdf_filename:str, stim_df:pd.DataFrame, df_map:dict, error_map:dict, modality_to_plot='et') -> dict:
     """
