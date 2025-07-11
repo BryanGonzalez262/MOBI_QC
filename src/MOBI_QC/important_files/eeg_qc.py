@@ -62,7 +62,7 @@ def compute_eeg_pipeline(xdf_filename, stim_df, task='RestingState'):
                                             'excluded_components']}
     eeg_error = False
     try:
-        whote_eeg_df = import_eeg_data(xdf_filename)
+        whole_eeg_df = import_eeg_data(xdf_filename)
 
         if len(glob('/'.join(xdf_filename.split('/')[:-1]) +'/*.fif')) < 1:
             df = get_event_data(event=task, 
