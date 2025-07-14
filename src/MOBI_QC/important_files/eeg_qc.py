@@ -174,7 +174,7 @@ def compute_eeg_pipeline(xdf_filename, stim_df, task='RestingState'):
         # ica.plot_overlay(raw_cleaned, picks=[0,3,10,11,13,14,18,19])
         return vars, whole_eeg_df, eeg_error
 
-    except IndexError:
+    except ValueError:
         whole_eeg_df = pd.DataFrame()
         vars.update({key: float('nan') for key in vars.keys()})
         eeg_error = True
