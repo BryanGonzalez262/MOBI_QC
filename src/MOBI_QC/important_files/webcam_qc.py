@@ -133,7 +133,6 @@ def plot_frames_with_wrap(frames, highlight_indices=[], overlap_ratio=0.3, frame
     plt.figure(figsize=(frames_per_row * 1.5, num_rows * 2.5))  # Adjust figure size dynamically
     plt.imshow(canvas)
     plt.axis("off")
-    plt.show()
     return canvas
 
 
@@ -173,7 +172,7 @@ def webcam_qc(xdf_filename:str, video_file:str, stim_df:pd.DataFrame, task:str):
 
     fc, face_frames, frames_checked = count_faces_in_video(video_file, cam_df=cam_df, stim_df=stim_df, task=task, frame_skip=10)
     frames_without_faces = [frame for frame in frames_checked if frame not in face_frames]
-    face_perc = fc/len(frames_checked)
+    face_perc = fc/len(frames_checked)*100
     vars['face_perc'] = face_perc
 
 

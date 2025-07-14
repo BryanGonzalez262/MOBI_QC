@@ -223,7 +223,7 @@ def get_durations(xdf_path: str,
 
         # print if no data
         if event_data.empty:
-            durations_df.loc[i] = [stream, 0, str(datetime.timedelta(seconds=0)), '0.00%']
+            durations_df.loc[i] = [stream, 0, str(datetime.timedelta(seconds=0)), '0.0000']
             print(f'{stream} has no {task} data') 
             continue
         # calculate duration
@@ -236,7 +236,7 @@ def get_durations(xdf_path: str,
         dt_dur = str(datetime.timedelta(seconds=round(dt.total_seconds())))
 
         # calculate percent 
-        percent = f'{dur/exp_dur:.4%}'
+        percent = round(dur/exp_dur * 100, 4)
 
         durations_df.loc[i] = [stream, dur, dt_dur, percent]
 
@@ -248,7 +248,7 @@ def get_durations(xdf_path: str,
             print(f"{i[1]['stream']} is shorter than expected for {task} by {exp_dur - i[1]['duration']:.4f} seconds")
     
     # print + return durations_df
-    durations_df.loc[durations_df.index.max() + 1] = ['expected', exp_dur, exp_dt_dur, '100.0000%']
+    durations_df.loc[durations_df.index.max() + 1] = ['expected', exp_dur, exp_dt_dur, '100.0000']
     durations_df.sort_values(by='duration', inplace=True)
     print('\n' + task + ' DataFrame')
     return durations_df
@@ -304,7 +304,7 @@ def whole_durations(xdf_path: str, stim_df: pd.DataFrame, df_map: dict, error_ma
 
     # percent
     max_dur = whole_durations_df.duration.max()
-    whole_durations_df['percent'] = whole_durations_df['duration'].apply(lambda x: f"{x / max_dur:.4%}")
+    whole_durations_df['percent'] = whole_durations_df['duration'].apply(lambda x: round(x / max_dur * 100, 4) )
 
     # print which are short
     for i in whole_durations_df.iterrows():

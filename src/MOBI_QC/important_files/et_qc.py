@@ -40,12 +40,12 @@ def et_invalid_data(et_df: pd.DataFrame) -> tuple[float, float, float, float, fl
     Returns:
         left_gaze_point_invalid, right_gaze_point_invalid, left_gaze_origin_invalid, right_gaze_origin_invalid, left_pupil_invalid, right_pupil_invalid (floats): Decimals representing amount of data invalid from each variable.
     """
-    left_gaze_point_invalid = 1 - et_df.left_gaze_point_validity.mean() 
-    right_gaze_point_invalid = 1 - et_df.right_gaze_point_validity.mean()
-    left_gaze_origin_invalid = 1 - et_df.left_gaze_origin_validity.mean()
-    right_gaze_origin_invalid = 1 - et_df.right_gaze_origin_validity.mean()
-    left_pupil_invalid = 1 - et_df.left_pupil_validity.mean()
-    right_pupil_invalid = 1 - et_df.right_pupil_validity.mean()
+    left_gaze_point_invalid = (1 - et_df.left_gaze_point_validity.mean()) * 100 
+    right_gaze_point_invalid = (1 - et_df.right_gaze_point_validity.mean()) * 100
+    left_gaze_origin_invalid = (1 - et_df.left_gaze_origin_validity.mean()) * 100
+    right_gaze_origin_invalid = (1 - et_df.right_gaze_origin_validity.mean()) * 100
+    left_pupil_invalid = (1 - et_df.left_pupil_validity.mean()) * 100
+    right_pupil_invalid = (1 - et_df.right_pupil_validity.mean()) * 100
     return left_gaze_point_invalid, right_gaze_point_invalid, left_gaze_origin_invalid, right_gaze_origin_invalid, left_pupil_invalid, right_pupil_invalid 
 
 def xyz_measures_check(val_df: pd.DataFrame) -> bool:
@@ -132,7 +132,7 @@ def et_val_LR(val_df: pd.DataFrame) -> float:
     rmean = RL_val.loc[RL_val.eye =='right', 'mean'][1]
     mean_diff = RL_val.loc[RL_val.eye =='diff', 'mean'][3]
 
-    return abs(mean_diff)
+    return abs(mean_diff) * 100
 
 def et_percent_over02(et_df: pd.DataFrame) -> float:
     """
@@ -156,7 +156,7 @@ def et_percent_over02(et_df: pd.DataFrame) -> float:
     y2 = et_nums.left_gaze_point_on_display_area_1
     dists = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
-    percent_over02 = sum(dists >= 0.2)/len(dists)  
+    percent_over02 = sum(dists >= 0.2)/len(dists) * 100  
     return percent_over02 
 
 def et_lineplot(et_df: pd.DataFrame, percent_over02: float, sub_id: str):
@@ -214,12 +214,12 @@ def et_qc(xdf_filename: str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
         print(f"Effective sampling rate: {sampling_rate:.4f}")
 
         vars['left_gaze_point_invalid'], vars['right_gaze_point_invalid'], vars['left_gaze_origin_invalid'], vars['right_gaze_origin_invalid'], vars['left_pupil_invalid'], vars['right_pupil_invalid'] = et_invalid_data(et_df)
-        print(f"Percent invalid data in left gaze point: {vars['left_gaze_point_invalid']:.4%}")
-        print(f"Percent invalid data in right gaze point: {vars['right_gaze_point_invalid']:.4%}")
-        print(f"Percent invalid data in left gaze origin: {vars['left_gaze_origin_invalid']:.4%}")
-        print(f"Percent invalid data in right gaze origin: {vars['right_gaze_origin_invalid']:.4%}")
-        print(f"Percent invalid data in left pupil diameter: {vars['left_pupil_invalid']:.4%}")
-        print(f"Percent invalid data in right pupil diameter: {vars['right_pupil_invalid']:.4%}")
+        print(f"Percent invalid data in left gaze point: {vars['left_gaze_point_invalid']:.4}%")
+        print(f"Percent invalid data in right gaze point: {vars['right_gaze_point_invalid']:.4}%")
+        print(f"Percent invalid data in left gaze origin: {vars['left_gaze_origin_invalid']:.4}%")
+        print(f"Percent invalid data in right gaze origin: {vars['right_gaze_origin_invalid']:.4}%")
+        print(f"Percent invalid data in left pupil diameter: {vars['left_pupil_invalid']:.4}%")
+        print(f"Percent invalid data in right pupil diameter: {vars['right_pupil_invalid']:.4}%")
 
         vars['xyz_measures_check'] = xyz_measures_check(val_df)
         print(f"Flag: all coordinates have the same % validity within each measure (LR, gaze point/origin/diameter): {vars['flag1']}")
@@ -228,10 +228,10 @@ def et_qc(xdf_filename: str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
         print(f"Flag: % of NaNs is the same between coordinate systems (UCS and TBCS (gaze origin) and between UCS and display area (gaze point)): {vars['flag2']}")
 
         vars['LR_mean_diff'] = et_val_LR(val_df)
-        print(f"Mean difference in percent valid data between right and left eyes: {vars['LR_mean_diff']:.4%}")
+        print(f"Mean difference in percent valid data between right and left eyes: {vars['LR_mean_diff']:.4}%")
 
         vars['percent_over02'] = et_percent_over02(et_df)
-        print(f"Percent of data with gaze point differences of over 0.2 mm: {vars['percent_over02']:.4%}")
+        print(f"Percent of data with gaze point differences of over 0.2 mm: {vars['percent_over02']:.4}%")
 
         et_lineplot(et_df, vars['percent_over02'], sub_id)
 
