@@ -66,7 +66,7 @@ def compute_eeg_pipeline(xdf_filename, stim_df, task='RestingState'):
 
         if len(glob('/'.join(xdf_filename.split('/')[:-1]) +'/*.fif')) < 1:
             df = get_event_data(event=task, 
-                                df=ddf,
+                                df=whole_eeg_df,
                                 stim_df=stim_df)
             
             ch_names = [f"E{i+1}" for i in range(df.shape[1] - 1)]
