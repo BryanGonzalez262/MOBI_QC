@@ -27,7 +27,7 @@ def eda_signal_integrity_check(eda_df: pd.DataFrame) -> float:
         if np.isnan(x) == True:
             count_nan = count_nan + 1
 
-    eda_validity = 100 - (count_nan/len(eda_df['EDA2'])) * 100
+    eda_validity = 100.0 - (count_nan/len(eda_df['EDA2'])) * 100
     return eda_validity
 # Preprocess EDA signal
 def eda_preprocess(eda_df: pd.DataFrame, eda_sampling_rate: float) -> tuple[pd.DataFrame, dict]:
@@ -111,7 +111,7 @@ def scr_amplitudes(info: dict) -> tuple[float, float]:
         else:
             count_invalid_scr = count_invalid_scr + 1
 
-    scr_amplitude_validity = 100 - (count_invalid_scr/len(scr_amplitudes)) * 100
+    scr_amplitude_validity = 100.0 - (count_invalid_scr/len(scr_amplitudes)) * 100
 
     return average_scr_amplitude, scr_amplitude_validity
 
