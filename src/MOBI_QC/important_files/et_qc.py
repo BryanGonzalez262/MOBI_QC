@@ -201,7 +201,7 @@ def et_qc(xdf_filename: str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
     """
     sub_id = xdf_filename.split('sub-')[1].split('/')[0]
     vars = {}
-    vars['sampling_rate'], vars['left_gaze_point_invalid'], vars['right_gaze_point_invalid'], vars['left_gaze_origin_invalid'], vars['right_gaze_origin_invalid'], vars['left_pupil_invalid'], vars['right_pupil_invalid'], vars['flag1'], vars['flag2'], vars['LR_mean_diff'], vars['percent_over02'] = np.zeros(11)
+    vars['sampling_rate'], vars['left_gaze_point_invalid'], vars['right_gaze_point_invalid'], vars['left_gaze_origin_invalid'], vars['right_gaze_origin_invalid'], vars['left_pupil_invalid'], vars['right_pupil_invalid'], vars['xyz_measures_check'], vars['coordinate_system_check'], vars['LR_mean_diff'], vars['percent_over02'] = np.zeros(11)
 
     try:
         whole_et_df = import_et_data(xdf_filename)
@@ -222,10 +222,10 @@ def et_qc(xdf_filename: str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
         print(f"Percent invalid data in right pupil diameter: {vars['right_pupil_invalid']:.4}%")
 
         vars['xyz_measures_check'] = xyz_measures_check(val_df)
-        print(f"Flag: all coordinates have the same % validity within each measure (LR, gaze point/origin/diameter): {vars['flag1']}")
+        print(f"Flag: all coordinates have the same % validity within each measure (LR, gaze point/origin/diameter): {vars['xyz_measures_check']}")
 
         vars['coordinate_system_check'] = coordinate_system_check(val_df)
-        print(f"Flag: % of NaNs is the same between coordinate systems (UCS and TBCS (gaze origin) and between UCS and display area (gaze point)): {vars['flag2']}")
+        print(f"Flag: % of NaNs is the same between coordinate systems (UCS and TBCS (gaze origin) and between UCS and display area (gaze point)): {vars['coordinate_system_check']}")
 
         vars['LR_mean_diff'] = et_val_LR(val_df)
         print(f"Mean difference in percent valid data between right and left eyes: {vars['LR_mean_diff']:.4}%")
