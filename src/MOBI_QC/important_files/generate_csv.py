@@ -22,6 +22,8 @@ def get_subjectID_and_collectionDate(xdf_filename:str):
 def unpack_vars(lsl_vars, duration_vars):
     # Unpack lsl vars
     lsl_prob_vars = {}
+    stream_vars = {}
+
     for key in lsl_vars.keys():
         if isinstance(lsl_vars[key], pd.DataFrame):
             lsl_k = lsl_vars[key].to_dict(orient='records')
