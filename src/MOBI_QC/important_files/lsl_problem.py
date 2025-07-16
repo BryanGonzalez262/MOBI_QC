@@ -69,7 +69,7 @@ def lsl_loss_percentage(df_map: dict, error_map: dict, sub_id: str) -> pd.DataFr
             percent_lost = amt_data_lost/amt_data_total * 100
         else:
             percent_lost = 0
-        percent_list.append({'subject': sub_id, 'modality': modality, 'num_losses': loss_instances, 'percent_lost': round(percent_lost, 4)})
+        percent_list.append({'subject': sub_id, 'stream': modality, 'num_losses': loss_instances, 'percent_lost': round(percent_lost, 4)})
         
     percent_data_loss = pd.DataFrame(percent_list)
     percent_data_loss.sort_values(by='percent_lost', inplace=True, ascending=False)
@@ -119,7 +119,7 @@ def lsl_loss_before_social(df_map: dict, error_map: dict, sub_id: str, offset_so
         amt_data_total = offset_social_timestamp - social_df['lsl_time_stamp'].values[0]
         percent_lost = amt_data_lost/amt_data_total * 100
 
-        social_percent_list.append({'subject': sub_id, 'modality': modality, 'num_losses': loss_instances, 'percent_lost': round(percent_lost, 4)})
+        social_percent_list.append({'subject': sub_id, 'stream': modality, 'num_losses': loss_instances, 'percent_lost': round(percent_lost, 4)})
             
     percent_data_loss_social = pd.DataFrame(social_percent_list)
     percent_data_loss_social.sort_values(by='percent_lost', inplace=True, ascending=False)
