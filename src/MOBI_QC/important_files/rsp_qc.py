@@ -49,7 +49,7 @@ def rsp_snr(rsp: pd.Series, rsp_clean: np.ndarray) -> float:
     return snr
 
 # breath amplitude 
-def rsp_breath_amplitude(rsp_clean: np.ndarray, peaks_df: pd.DataFrame, rsp_df: pd.DataFrame, sub_id: str) -> tuple[float, float, str]:
+def rsp_breath_amplitude(rsp_clean: np.ndarray, peaks_df: pd.DataFrame, rsp_df: pd.DataFrame, sub_id: str) -> tuple[float, float, float, float]:
     """
     Calculates and plots the breath amplitude of the respiration signal.
     Args:
@@ -60,7 +60,8 @@ def rsp_breath_amplitude(rsp_clean: np.ndarray, peaks_df: pd.DataFrame, rsp_df: 
     Returns:
         mean (float): Mean breath amplitude.
         std (float): Standard deviation of breath amplitude.
-        rang (str): Range of breath amplitude.
+        rmin (float): Minimum breath amplitude value.
+        rmax (float): Maximum breath amplitude value.
     """
     # subtract values of troughs and peaks to get breath amplitude
     cleaned_troughs_values = rsp_clean[peaks_df['RSP_Troughs'].to_numpy() == 1]
@@ -70,7 +71,8 @@ def rsp_breath_amplitude(rsp_clean: np.ndarray, peaks_df: pd.DataFrame, rsp_df: 
     # stats
     mean = np.mean(cleaned_breath_amplitude)
     std = np.std(cleaned_breath_amplitude)
-    rang = f'{np.min(cleaned_breath_amplitude):.4f}' + ' - ' + f'{np.max(cleaned_breath_amplitude):.4f}'
+    rmin = np.min(cleaned_breath_amplitude)
+    rmax = np.max(cleaned_breath_amplitude)
 
     # plot
     x = rsp_df.time[peaks_df['RSP_Peaks'].to_numpy() == 1]
@@ -87,10 +89,10 @@ def rsp_breath_amplitude(rsp_clean: np.ndarray, peaks_df: pd.DataFrame, rsp_df: 
     plt.legend()
     plt.savefig(f'report_images/{sub_id}_rsp_breathamplitude.png')
 
-    return mean, std, rang
+    return mean, std, rmin, rmax
 
 # respiration rate
-def rsp_rate(rsp_clean: np.ndarray, peaks_dict: dict, sampling_rate: float, sub_id: str) -> tuple[float, float, str]:
+def rsp_rate(rsp_clean: np.ndarray, peaks_dict: dict, sampling_rate: float, sub_id: str) -> tuple[float, float, float, float]:
     """
     Calculates and plots the respiration rate of the respiration signal.
     Args:
@@ -100,7 +102,8 @@ def rsp_rate(rsp_clean: np.ndarray, peaks_dict: dict, sampling_rate: float, sub_
     Returns:
         mean (float): Mean respiration rate.
         std (float): Standard deviation of respiration rate.
-        rang (str): Range of respiration rate.
+        rmin (float): Minimum respiration rate value.
+        rmax (float): Maximum respiration rate value.
     """
     rsp_rate = nk.rsp_rate(rsp_clean, peaks_dict, sampling_rate=sampling_rate, method = 'xcorr')
     nk.signal_plot(rsp_rate, sampling_rate=sampling_rate, alpha = 0.6)
@@ -110,12 +113,13 @@ def rsp_rate(rsp_clean: np.ndarray, peaks_dict: dict, sampling_rate: float, sub_
 
     mean = np.mean(rsp_rate)
     std = np.std(rsp_rate)
-    rang = f'{np.min(rsp_rate):.4f}' + ' - ' + f'{np.max(rsp_rate):.4f}'
+    rmin = np.min(rsp_rate)
+    rmax = np.max(rsp_rate)
 
-    return mean, std, rang
+    return mean, std, rmin, rmax
 
 # peak to peak interval
-def rsp_peak_to_peak(rsp_df: pd.DataFrame, peaks_df: pd.DataFrame, sub_id: str) -> tuple[float, float, str]:
+def rsp_peak_to_peak(rsp_df: pd.DataFrame, peaks_df: pd.DataFrame, sub_id: str) -> tuple[float, float, float, float]:
     """
     Calculates and plots the peak-to-peak interval, or the time between each breath, of the respiration signal.
     Args:
@@ -124,7 +128,8 @@ def rsp_peak_to_peak(rsp_df: pd.DataFrame, peaks_df: pd.DataFrame, sub_id: str) 
     Returns:
         mean (float): Mean peak-to-peak interval.
         std (float): Standard deviation of peak-to-peak interval.
-        rang (str): Range of peak-to-peak interval.
+        rmin (float): Minimum peak-to-peak interval value.
+        rmax (float): Maximum peak-to-peak interval value.
     """
     ptp_df = rsp_df[peaks_df['RSP_Peaks'].to_numpy() == 1]
     ptp_df.reset_index(drop = True, inplace = True)
@@ -133,7 +138,8 @@ def rsp_peak_to_peak(rsp_df: pd.DataFrame, peaks_df: pd.DataFrame, sub_id: str) 
 
     mean = np.nanmean(ptp)
     std = np.nanstd(ptp)
-    rang = f'{np.nanmin(ptp):.4f}' + ' - ' + f'{np.nanmax(ptp):.4f}'
+    rmin = np.nanmin(ptp)
+    rmax = np.nanmax(ptp)
 
     x = ptp_df['time'][1:]
     y = ptp[1:]
@@ -149,7 +155,7 @@ def rsp_peak_to_peak(rsp_df: pd.DataFrame, peaks_df: pd.DataFrame, sub_id: str) 
     plt.legend()
     plt.savefig(f'report_images/{sub_id}_rsp_peaktopeak.png')
 
-    return mean, std, rang
+    return mean, std, rmin, rmax
 
 # baseline drift using lowpass
 def rsp_lowpass_filter(rsp: pd.Series, cutoff=0.05, fs=500, order=2) -> np.ndarray:
@@ -230,20 +236,20 @@ def rsp_qc(xdf_filename:str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
     vars['rsp_snr'] = rsp_snr(rsp, rsp_clean)
     print(f"Signal to Noise Ratio: {vars['rsp_snr']:.4f}")
 
-    vars['breath_amplitude_mean'], vars['breath_amplitude_std'], vars['breath_amplitude_range'] = rsp_breath_amplitude(rsp_clean, peaks_df, rsp_df, sub_id)
+    vars['breath_amplitude_mean'], vars['breath_amplitude_std'], vars['breath_amplitude_min'], vars['breath_amplitude_max'] = rsp_breath_amplitude(rsp_clean, peaks_df, rsp_df, sub_id)
     print(f"Breath amplitude mean: {vars['breath_amplitude_mean']:.4f}")
     print(f"Breath amplitude std: {vars['breath_amplitude_std']:.4f}")
-    print(f"Breath amplitude range: {vars['breath_amplitude_range']}")
+    print(f"Breath amplitude range: {vars['breath_amplitude_min']:.4f} - {vars['breath_amplitude_max']:.4f}")
 
-    vars['rsp_rate_mean'], vars['rsp_rate_std'], vars['rsp_rate_range'] = rsp_rate(rsp_clean, peaks_dict, sampling_rate, sub_id)
+    vars['rsp_rate_mean'], vars['rsp_rate_std'], vars['rsp_rate_min'], vars['rsp_rate_max'] = rsp_rate(rsp_clean, peaks_dict, sampling_rate, sub_id)
     print(f"Respiration rate mean: {vars['rsp_rate_mean']:.4f}")
     print(f"Respiration rate std: {vars['rsp_rate_std']:.4f}")
-    print(f"Respiration rate range: {vars['rsp_rate_range']}")
+    print(f"Respiration rate range: {vars['rsp_rate_min']:.4f} - {vars['rsp_rate_max']:.4f}")
 
-    vars['ptp_mean'], vars['ptp_std'], vars['ptp_range'] = rsp_peak_to_peak(rsp_df, peaks_df, sub_id)
+    vars['ptp_mean'], vars['ptp_std'], vars['ptp_min'], vars['ptp_max'] = rsp_peak_to_peak(rsp_df, peaks_df, sub_id)
     print(f"Peak to peak interval mean: {vars['ptp_mean']:.4f}")
     print(f"Peak to peak interval std: {vars['ptp_std']:.4f}")
-    print(f"Peak to peak interval range: {vars['ptp_range']}")
+    print(f"Peak to peak interval range: {vars['ptp_min']:.4f} - {vars['ptp_max']:.4f}")
 
     lowpass = rsp_lowpass_filter(rsp)
     vars['baseline_drift'] = np.std(lowpass)
