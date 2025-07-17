@@ -202,7 +202,7 @@ def rsp_autocorrelation(rsp: pd.Series, ptp_mean: float, sampling_rate: float, s
     return autocorr
 
 # final big dict 
-def rsp_qc(xdf_filename:str, stim_df: pd.DataFrame, task = 'Experiment') -> tuple[dict, pd.DataFrame]:
+def rsp_qc(xdf_filename:str, stim_df: pd.DataFrame, task = 'Experiment') -> tuple[dict, pd.DataFrame, bool]:
     """
     Main function to extract respiration quality control metrics.
     Args:
@@ -211,54 +211,67 @@ def rsp_qc(xdf_filename:str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
         task (str): arm of the experiment for which user wants quality control performed.
     Returns:
         vars (dict): Dictionary containing respiration quality control metrics.
-        ps_df (pd.DataFrame): DataFrame containing physiological data.
+        whole_ps_df (pd.DataFrame): DataFrame containing physiological data.
+        rsp_error (bool): Indicates whether there was an error loading RSP data.
     """
     
     # load data 
     sub_id = xdf_filename.split('sub-')[1].split('/')[0]
     whole_ps_df = import_physio_data(xdf_filename)
-    ps_df = get_event_data(event = task, df = whole_ps_df, stim_df = stim_df)
-
-    # get rsp data
-    rsp_df = ps_df[['RESPIRATION0', 'lsl_time_stamp']].rename(columns={'RESPIRATION0': 'respiration'})
-    rsp_df['time'] = rsp_df['lsl_time_stamp'] - rsp_df['lsl_time_stamp'][0]
-    rsp = rsp_df.respiration
-    sampling_rate = get_sampling_rate(rsp_df)
-
-    # preprocess
-    rsp_clean, peaks_df, peaks_dict = rsp_preprocess(rsp, sampling_rate)
-
-    # variables
     vars = {}
-    vars['sampling_rate'] = sampling_rate
-    print(f"Effective sampling rate: {sampling_rate:.4f}")
+    vars['sampling_rate'], vars['rsp_snr'], vars['breath_amplitude_mean'],vars['breath_amplitude_std'], vars['breath_amplitude_min'], vars['breath_amplitude_max'], vars['rsp_rate_mean'], vars['rsp_rate_std'], vars['rsp_rate_min'], vars['rsp_rate_max'], vars['ptp_mean'], vars['ptp_std'], vars['ptp_min'], vars['ptp_max'], vars['baseline_drift'], vars['autocorrelation'] = np.zeros(16)    
+    
+    try:
+        ps_df = get_event_data(event = task, df = whole_ps_df, stim_df = stim_df)
 
-    vars['rsp_snr'] = rsp_snr(rsp, rsp_clean)
-    print(f"Signal to Noise Ratio: {vars['rsp_snr']:.4f}")
+        # get rsp data
+        rsp_df = ps_df[['RESPIRATION0', 'lsl_time_stamp']].rename(columns={'RESPIRATION0': 'respiration'})
+        rsp_df['time'] = rsp_df['lsl_time_stamp'] - rsp_df['lsl_time_stamp'][0]
+        rsp = rsp_df.respiration
+        sampling_rate = get_sampling_rate(rsp_df)
 
-    vars['breath_amplitude_mean'], vars['breath_amplitude_std'], vars['breath_amplitude_min'], vars['breath_amplitude_max'] = rsp_breath_amplitude(rsp_clean, peaks_df, rsp_df, sub_id)
-    print(f"Breath amplitude mean: {vars['breath_amplitude_mean']:.4f}")
-    print(f"Breath amplitude std: {vars['breath_amplitude_std']:.4f}")
-    print(f"Breath amplitude range: {vars['breath_amplitude_min']:.4f} - {vars['breath_amplitude_max']:.4f}")
+        # preprocess
+        rsp_clean, peaks_df, peaks_dict = rsp_preprocess(rsp, sampling_rate)
 
-    vars['rsp_rate_mean'], vars['rsp_rate_std'], vars['rsp_rate_min'], vars['rsp_rate_max'] = rsp_rate(rsp_clean, peaks_dict, sampling_rate, sub_id)
-    print(f"Respiration rate mean: {vars['rsp_rate_mean']:.4f}")
-    print(f"Respiration rate std: {vars['rsp_rate_std']:.4f}")
-    print(f"Respiration rate range: {vars['rsp_rate_min']:.4f} - {vars['rsp_rate_max']:.4f}")
+        # variables
+        vars['sampling_rate'] = sampling_rate
+        print(f"Effective sampling rate: {sampling_rate:.4f}")
 
-    vars['ptp_mean'], vars['ptp_std'], vars['ptp_min'], vars['ptp_max'] = rsp_peak_to_peak(rsp_df, peaks_df, sub_id)
-    print(f"Peak to peak interval mean: {vars['ptp_mean']:.4f}")
-    print(f"Peak to peak interval std: {vars['ptp_std']:.4f}")
-    print(f"Peak to peak interval range: {vars['ptp_min']:.4f} - {vars['ptp_max']:.4f}")
+        vars['rsp_snr'] = rsp_snr(rsp, rsp_clean)
+        print(f"Signal to Noise Ratio: {vars['rsp_snr']:.4f}")
 
-    lowpass = rsp_lowpass_filter(rsp)
-    vars['baseline_drift'] = np.std(lowpass)
-    print(f"Baseline drift: {vars['baseline_drift']:.4f}")
+        vars['breath_amplitude_mean'], vars['breath_amplitude_std'], vars['breath_amplitude_min'], vars['breath_amplitude_max'] = rsp_breath_amplitude(rsp_clean, peaks_df, rsp_df, sub_id)
+        print(f"Breath amplitude mean: {vars['breath_amplitude_mean']:.4f}")
+        print(f"Breath amplitude std: {vars['breath_amplitude_std']:.4f}")
+        print(f"Breath amplitude range: {vars['breath_amplitude_min']:.4f} - {vars['breath_amplitude_max']:.4f}")
 
-    vars['autocorrelation'] = rsp_autocorrelation(rsp, vars['ptp_mean'], sampling_rate, sub_id)
-    print(f"Autocorrelation at typical breath cycle: {vars['autocorrelation']:.4f}")
+        vars['rsp_rate_mean'], vars['rsp_rate_std'], vars['rsp_rate_min'], vars['rsp_rate_max'] = rsp_rate(rsp_clean, peaks_dict, sampling_rate, sub_id)
+        print(f"Respiration rate mean: {vars['rsp_rate_mean']:.4f}")
+        print(f"Respiration rate std: {vars['rsp_rate_std']:.4f}")
+        print(f"Respiration rate range: {vars['rsp_rate_min']:.4f} - {vars['rsp_rate_max']:.4f}")
 
-    return vars, whole_ps_df
+        vars['ptp_mean'], vars['ptp_std'], vars['ptp_min'], vars['ptp_max'] = rsp_peak_to_peak(rsp_df, peaks_df, sub_id)
+        print(f"Peak to peak interval mean: {vars['ptp_mean']:.4f}")
+        print(f"Peak to peak interval std: {vars['ptp_std']:.4f}")
+        print(f"Peak to peak interval range: {vars['ptp_min']:.4f} - {vars['ptp_max']:.4f}")
+
+        lowpass = rsp_lowpass_filter(rsp)
+        vars['baseline_drift'] = np.std(lowpass)
+        print(f"Baseline drift: {vars['baseline_drift']:.4f}")
+
+        vars['autocorrelation'] = rsp_autocorrelation(rsp, vars['ptp_mean'], sampling_rate, sub_id)
+        print(f"Autocorrelation at typical breath cycle: {vars['autocorrelation']:.4f}")
+
+        rsp_error = False
+        return vars, whole_ps_df, rsp_error
+        
+    except KeyError:
+        print(f'Error: No RSP data found for participant {subject} in {xdf_filename}.')
+        vars.update({key: float('nan') for key in vars.keys()})
+        rsp_error = True
+        return vars, whole_ps_df, rsp_error
+
+
 
 # allow the functions in this script to be imported into other scripts
 if __name__ == "__main__":

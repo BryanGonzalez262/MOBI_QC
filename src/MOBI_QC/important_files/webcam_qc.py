@@ -138,51 +138,62 @@ def plot_frames_with_wrap(frames, highlight_indices=[], overlap_ratio=0.3, frame
 
 
 def webcam_qc(xdf_filename:str, video_file:str, stim_df:pd.DataFrame, task:str):
-    cam_df = import_video_data(xdf_filename)
     
     sub_id = xdf_filename.split('sub-')[1].split('/')[0]
-
-
-    exp_start = stim_df.loc[stim_df.event == f'Onset_{task}', 'lsl_time_stamp'].values[0]
-    exp_end = stim_df.loc[stim_df.event == f'Offset_{task}', 'lsl_time_stamp'].values[0]
-    experiment_dur = exp_end - exp_start
-
-    cam_exp = get_event_data(task, cam_df, stim_df=stim_df)
-
-    start = cam_exp['lsl_time_stamp'].values[0]
-    stop = cam_exp['lsl_time_stamp'].values[-1]
-    cam_dur = stop - start
     vars = {}
-    
-    if abs(experiment_dur - cam_dur) < 0.1:
-        print(f'{task} duration matches camera duration!')
-        vars[f'collected_full_{task}'] = True
-        print(f'{task}: ', experiment_dur)
-        print('Webcam Stream: ', cam_dur)
-    else:
-        print(f'{task} duration does not match camera duration!')
-        vars[f'collected_full_{task}'] = True
-
-        print(f'{task}: ', experiment_dur)
-        print('Webcam Stream: ', cam_dur)
-
-    sampling_rate = 1/cam_df.frame_time_sec.diff().mean()  # 30 fps
-    vars['sampling_rate'] = sampling_rate
-    cam_df['face_detected'] = False
-
-    fc, face_frames, frames_checked = count_faces_in_video(video_file, cam_df=cam_df, stim_df=stim_df, task=task, frame_skip=10)
-    frames_without_faces = [frame for frame in frames_checked if frame not in face_frames]
-    face_perc = fc/len(frames_checked)*100
-    vars['face_perc'] = face_perc
+    vars[f'collected_full_{task}'], vars['sampling_rate'], vars['face_perc'] = np.zeros(3)
 
 
-    frame_indices = frames_checked[5::5] # plot every 5th frame
-    highlight_indices = [frame_indices.index(xx)  for xx in [x for x in frames_without_faces if x in frame_indices]] # Indices of frames to be highlighted in red
-    frames = extract_frames(video_file, frame_indices, resize_scale=0.35)
-    canvas = plot_frames_with_wrap(frames, highlight_indices=highlight_indices, overlap_ratio=0.3, frames_per_row=30)
-    # same the canvas
-    plt.imsave(f'report_images/{sub_id}_webcam_qc.png', canvas)
-    return vars, cam_df
+    try:
+        exp_start = stim_df.loc[stim_df.event == f'Onset_{task}', 'lsl_time_stamp'].values[0]
+        exp_end = stim_df.loc[stim_df.event == f'Offset_{task}', 'lsl_time_stamp'].values[0]
+        experiment_dur = exp_end - exp_start
+
+        cam_df = import_video_data(xdf_filename)
+        cam_exp = get_event_data(task, cam_df, stim_df=stim_df)
+
+        start = cam_exp['lsl_time_stamp'].values[0]
+        stop = cam_exp['lsl_time_stamp'].values[-1]
+        cam_dur = stop - start
+
+        
+        if abs(experiment_dur - cam_dur) < 0.1:
+            print(f'{task} duration matches camera duration!')
+            vars[f'collected_full_{task}'] = True
+            print(f'{task}: ', experiment_dur)
+            print('Webcam Stream: ', cam_dur)
+        else:
+            print(f'{task} duration does not match camera duration!')
+            vars[f'collected_full_{task}'] = True
+
+            print(f'{task}: ', experiment_dur)
+            print('Webcam Stream: ', cam_dur)
+
+        sampling_rate = 1/cam_df.frame_time_sec.diff().mean()  # 30 fps
+        vars['sampling_rate'] = sampling_rate
+        cam_df['face_detected'] = False
+
+        fc, face_frames, frames_checked = count_faces_in_video(video_file, cam_df=cam_df, stim_df=stim_df, task=task, frame_skip=10)
+        frames_without_faces = [frame for frame in frames_checked if frame not in face_frames]
+        face_perc = fc/len(frames_checked)*100
+        vars['face_perc'] = face_perc
+
+
+        frame_indices = frames_checked[5::5] # plot every 5th frame
+        highlight_indices = [frame_indices.index(xx)  for xx in [x for x in frames_without_faces if x in frame_indices]] # Indices of frames to be highlighted in red
+        frames = extract_frames(video_file, frame_indices, resize_scale=0.35)
+        canvas = plot_frames_with_wrap(frames, highlight_indices=highlight_indices, overlap_ratio=0.3, frames_per_row=30)
+        # same the canvas
+        plt.imsave(f'report_images/{sub_id}_webcam_qc.png', canvas)
+        cam_error = False
+        return vars, cam_df, cam_error
+    except: # UGH leaving this without a specific error bc no pts are missing cam data ! but im not happy about it 
+        cam_df = pd.DataFrame()
+        vars.update({key: float('nan') for key in vars.keys()})
+        cam_error = True
+        print(f'Error: No cam data found for participant {sub_id} in {xdf_filename}.')
+        return vars, cam_df, cam_error
+
 
 
 # allow the functions in this script to be imported into other scripts
