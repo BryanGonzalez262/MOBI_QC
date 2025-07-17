@@ -219,7 +219,7 @@ def rsp_qc(xdf_filename:str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
     sub_id = xdf_filename.split('sub-')[1].split('/')[0]
     whole_ps_df = import_physio_data(xdf_filename)
     vars = {}
-    vars['sampling_rate'], vars['rsp_snr'], vars['breath_amplitude_mean'],vars['breath_amplitude_std'], vars['breath_amplitude_min'], vars['breath_amplitude_max'], vars['rsp_rate_mean'], vars['rsp_rate_std'], vars['rsp_rate_min'], vars['rsp_rate_max'], vars['ptp_mean'], vars['ptp_std'], vars['ptp_min'], vars['ptp_max'], vars['baseline_drift'], vars['autocorrelation'] = np.zeros(16)    
+    vars['sampling_rate'], vars['percent_missing'], vars['rsp_snr'], vars['breath_amplitude_mean'],vars['breath_amplitude_std'], vars['breath_amplitude_min'], vars['breath_amplitude_max'], vars['rsp_rate_mean'], vars['rsp_rate_std'], vars['rsp_rate_min'], vars['rsp_rate_max'], vars['ptp_mean'], vars['ptp_std'], vars['ptp_min'], vars['ptp_max'], vars['baseline_drift'], vars['autocorrelation'] = np.zeros(17)    
     
     try:
         ps_df = get_event_data(event = task, df = whole_ps_df, stim_df = stim_df)
@@ -229,6 +229,7 @@ def rsp_qc(xdf_filename:str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
         rsp_df['time'] = rsp_df['lsl_time_stamp'] - rsp_df['lsl_time_stamp'][0]
         rsp = rsp_df.respiration
         sampling_rate = get_sampling_rate(rsp_df)
+        percent_missing = rsp.isnull().mean()
 
         # preprocess
         rsp_clean, peaks_df, peaks_dict = rsp_preprocess(rsp, sampling_rate)
@@ -236,6 +237,8 @@ def rsp_qc(xdf_filename:str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
         # variables
         vars['sampling_rate'] = sampling_rate
         print(f"Effective sampling rate: {sampling_rate:.4f}")
+        vars['percent_missing'] = percent_missing
+        print(f"Percent missing data: {percent_missing:.4f}%")
 
         vars['rsp_snr'] = rsp_snr(rsp, rsp_clean)
         print(f"Signal to Noise Ratio: {vars['rsp_snr']:.4f}")
@@ -264,7 +267,7 @@ def rsp_qc(xdf_filename:str, stim_df: pd.DataFrame, task = 'Experiment') -> tupl
 
         rsp_error = False
         return vars, whole_ps_df, rsp_error
-        
+
     except KeyError:
         print(f'Error: No RSP data found for participant {subject} in {xdf_filename}.')
         vars.update({key: float('nan') for key in vars.keys()})
